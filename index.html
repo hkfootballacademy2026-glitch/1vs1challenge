@@ -13,7 +13,7 @@
   #video{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;
     transform:scaleX(-1);filter:saturate(.95) brightness(.95)}
   #shade{position:fixed;inset:0;background:linear-gradient(#000a 0%,#0001 22%,#0001 72%,#000b 100%)}
-  #fx{position:fixed;inset:0;z-index:3;pointer-events:none}
+  #fx{position:fixed;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
   #hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;
     padding:calc(10px + env(safe-area-inset-top,0)) 18px 8px;z-index:5;pointer-events:none}
   .hb{text-align:center;line-height:1.05}
@@ -104,7 +104,7 @@
   <div class="card">
     <div class="kick">FACE TO FACE</div>
     <h1><em>1vs1</em>チャレンジ</h1>
-    <div class="ver">v4</div>
+    <div class="ver">v5</div>
     <div id="resultBox">
       <div class="bigv" id="rScore"></div>
       <div class="sub" id="rDetail"></div>
@@ -157,7 +157,9 @@ const fx=$('fx'),fctx=fx.getContext('2d');
 let FW=0,FH=0;
 function fxResize(){FW=innerWidth;FH=innerHeight;
   const d=Math.min(devicePixelRatio||1,2);
-  fx.width=FW*d;fx.height=FH*d;fctx.setTransform(d,0,0,d,0,0);}
+  fx.width=FW*d;fx.height=FH*d;
+  fx.style.width=FW+'px';fx.style.height=FH+'px';
+  fctx.setTransform(d,0,0,d,0,0);}
 addEventListener('resize',fxResize);fxResize();
 
 // ===== tracking v3 =====
