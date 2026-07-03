@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>1vs1チャレンジ</title>
 <style>
-  :root{--kit:#ff5c39;--ok:#42d77d;--ng:#ff4d6d;--gold:#ffd23f;--blue:#5ab0ff;--ink:#f4f8f2}
+  :root{--kit:#ff5c39;--ok:#42d77d;--ng:#ff4d6d;--gold:#ffd23f;--blue:#5ab0ff;--cyan:#4de1ff;--ink:#f4f8f2}
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%;overflow:hidden;background:#000;color:var(--ink);
     font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
@@ -30,8 +30,8 @@
   #sub{position:fixed;top:calc(94px + env(safe-area-inset-top,0));left:0;right:0;text-align:center;z-index:5;
     pointer-events:none;font-size:12px;opacity:.85;text-shadow:0 2px 10px #000}
   #big{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:7;
-    font-size:min(18vw,96px);font-weight:900;text-shadow:0 6px 30px #000;text-align:center;line-height:1.2;
-    opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;transform:scale(.7)}
+    font-size:min(26vw,150px);font-weight:900;text-shadow:0 6px 30px #000;text-align:center;line-height:1.2;
+    opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;transform:scale(.7)}
   #big.show{opacity:1;transform:scale(1)}
   #timerBar{position:fixed;top:0;left:0;height:4px;background:var(--gold);width:0%;z-index:8}
   #sepWrap{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0));left:50%;
@@ -64,13 +64,14 @@
   .mainBtn{border:none;border-radius:999px;padding:15px 44px;font-size:16px;font-weight:800;
     font-family:inherit;color:#fff;background:linear-gradient(135deg,#ff8a63,var(--kit));
     box-shadow:0 6px 22px #ff5c3966}
+  .mainBtn:disabled{opacity:.6}
   #err{display:none;font-size:12px;line-height:1.9;color:#ffb3b3;background:#4d101055;
     border-radius:12px;padding:12px;margin-top:14px;text-align:left}
   @media (orientation: landscape) and (max-height: 520px){
     .hb .v{font-size:19px}.hb .l{font-size:8px}
     #cue{top:calc(52px + env(safe-area-inset-top,0));font-size:16px}
     #sub{top:calc(76px + env(safe-area-inset-top,0));font-size:11px}
-    #big{font-size:min(12vw,80px)}
+    #big{font-size:min(16vw,110px)}
     #sepWrap{bottom:calc(8px + env(safe-area-inset-bottom,0));width:40%}
     #overlay{align-items:flex-start}
     .card{max-width:660px;padding:16px 24px calc(16px + env(safe-area-inset-bottom,0))}
@@ -102,9 +103,9 @@
 
 <div id="overlay">
   <div class="card">
-    <div class="kick">FACE TO FACE</div>
+    <div class="kick">AI BODY TRACKING</div>
     <h1><em>1vs1</em>チャレンジ</h1>
-    <div class="ver">v5</div>
+    <div class="ver">v6 — AIポーズ検知</div>
     <div id="resultBox">
       <div class="bigv" id="rScore"></div>
       <div class="sub" id="rDetail"></div>
@@ -113,19 +114,19 @@
       <div class="modeRow">
       <button class="modeBtn sel" id="modeReal">
         <div class="mt">⚽ 実ボールモード</div>
-        <div class="md">足元にボールを置き、中央のDFシルエットと正面で対峙。振り切って、ボールごと左右のゴールゲートへ！</div>
+        <div class="md">足元にボールを置き、中央のDFシルエットと対峙。振り切って、ボールごと左右のゴールへ！</div>
       </button>
       <button class="modeBtn" id="modeVirtual">
         <div class="mt">🎮 仮想ボールモード</div>
-        <div class="md">仮想ボールが足元についてくる。DFに密着されると奪われる！振り切ってゲートへ運べばゴール。</div>
+        <div class="md">仮想ボールが足元についてくる。DFに密着されると奪われる！振り切ってゴールへ運べ。</div>
       </button>
       </div>
       <div class="steps">
-        📱 全身が映る位置へ（2〜3歩さがる）<br>
-        🧍 最初に「静止→左右に動く」の2段階でカメラ調整<br>
-        🟡 黄色い<b>YOUマーカー</b>があなたの検知位置<br>
-        🔴 中央のDFが遅れて追ってくる → 逆を取れ！<br>
-        🥅 <b>振り切った状態で左右のゲートまで動けば1点</b>
+        🤖 AIがあなたの<b>全身の骨格</b>をリアルタイム検知<br>
+        📱 スマホを立てかけ、<b>全身が映る</b>まで下がる<br>
+        ✅ 位置OKになると<b>3・2・1のカウントダウン</b>で開始<br>
+        🔴 中央のDFがあなたを追ってマークしてくる<br>
+        🥅 振り切った状態で<b>左右のゴールまで動けば1点</b>
       </div>
     </div>
     <button class="mainBtn" id="startBtn">カメラを起動してキックオフ</button>
@@ -133,14 +134,12 @@
   </div>
 </div>
 
-<script>
-(()=>{
+<script type="module">
+import { FilesetResolver, PoseLandmarker } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
 const $=id=>document.getElementById(id);
 const video=$('video');
-const AC=112,AR=84;
-const a=document.createElement('canvas');a.width=AC;a.height=AR;
-const actx=a.getContext('2d',{willReadFrequently:true});
-let prevF=null,stream=null;
+let stream=null,pose=null,lastVT=-1;
 let state='idle',mode='real';
 const TOTAL=7;
 let round=0,score=0;
@@ -148,6 +147,17 @@ let round=0,score=0;
 const speak=t=>{try{const u=new SpeechSynthesisUtterance(t);u.lang='ja-JP';u.rate=1.15;
   speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}};
 const vib=p=>{if(navigator.vibrate)navigator.vibrate(p)};
+let actx2=null;
+function beep(f=880,d=0.12,type='sine',g=0.25){
+  try{
+    actx2=actx2||new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx2.createOscillator(),gn=actx2.createGain();
+    o.type=type;o.frequency.value=f;gn.gain.value=g;
+    o.connect(gn).connect(actx2.destination);
+    o.start();gn.gain.exponentialRampToValueAtTime(0.001,actx2.currentTime+d);
+    o.stop(actx2.currentTime+d);
+  }catch(e){}
+}
 const CUE=$('cue'),SUB=$('sub'),BIG=$('big');
 function bigMsg(t,c,ms=850){BIG.textContent=t;BIG.style.color=c||'#fff';
   BIG.classList.add('show');setTimeout(()=>BIG.classList.remove('show'),ms);}
@@ -162,63 +172,66 @@ function fxResize(){FW=innerWidth;FH=innerHeight;
   fctx.setTransform(d,0,0,d,0,0);}
 addEventListener('resize',fxResize);fxResize();
 
-// ===== tracking v3 =====
-// キャリブレーションで「列ごとのノイズ地図」を作り、それを差し引いた動きだけを見る。
-// これでカーテン・テレビ・照明のちらつき等の固定ノイズ源に引っ張られない。
-const colE=new Float32Array(AC);
-const colNoise=new Float32Array(AC);
-let userX=0,tracking=false;
-function rawCols(){
-  actx.save();actx.scale(-1,1);actx.drawImage(video,-AC,0,AC,AR);actx.restore();
-  const cur=actx.getImageData(0,0,AC,AR).data;
-  const col=new Float32Array(AC);
-  if(prevF){
-    for(let y=0;y<AR;y+=2){
-      for(let x=0;x<AC;x++){
-        const i=(y*AC+x)*4;
-        const d=Math.abs(cur[i]-prevF[i])+Math.abs(cur[i+1]-prevF[i+1])+Math.abs(cur[i+2]-prevF[i+2]);
-        if(d>46)col[x]++;
-      }
-    }
-  }
-  prevF=cur.slice();
-  return col;
-}
-function track(){
-  const col=rawCols();
-  let P=0,SX=0;
-  for(let x=0;x<AC;x++){
-    const adj=Math.max(0,col[x]-(colNoise[x]*1.8+0.4)); // ノイズ地図を差し引く
-    colE[x]=colE[x]*0.90+adj;
-    P+=colE[x];SX+=colE[x]*x;
-  }
-  tracking=P>10;
-  if(P>8){
-    const cx=(SX/P)/(AC-1)*2-1;
-    userX+=(cx-userX)*0.5;
+// ===== AI pose tracking =====
+// userX: 腰（左右ヒップの中点）の水平位置 [-1,1]
+let userX=0,tracking=false,lm=null;
+let bodyOK=false; // 全身が枠内か
+function updatePose(){
+  if(!pose||video.readyState<2)return;
+  if(video.currentTime===lastVT)return;
+  lastVT=video.currentTime;
+  const res=pose.detectForVideo(video,performance.now());
+  if(res.landmarks&&res.landmarks.length){
+    lm=res.landmarks[0];
+    const hip=(lm[23].x+lm[24].x)/2;
+    const sx=1-hip;                 // 表示はミラーなので反転
+    userX+=((sx*2-1)-userX)*0.6;
     userX=Math.max(-1,Math.min(1,userX));
-  }
+    tracking=true;
+    const vis=i=>(lm[i].visibility??1)>0.45;
+    const inY=i=>lm[i].y>0.02&&lm[i].y<0.99;
+    bodyOK=vis(0)&&inY(0)&&(vis(27)||vis(28))&&(inY(27)||inY(28));
+  }else{tracking=false;bodyOK=false;lm=null;}
   $('dot').classList.toggle('on',tracking);
-  $('trackLbl').textContent=tracking?'検知中':'動いて位置を教えて';
+  $('trackLbl').textContent=tracking?(bodyOK?'全身検知OK':'検知中（全身を映して）'):'あなたが見つかりません';
 }
 
-// ===== defender：中央基点＋遅延追跡 =====
+// ===== defender =====
 let dfX=0,hist=[];
-let dfSpeed=1.6,dfReact=380;
+let dfSpeed=1.5,dfReact=380;
 function dfUpdate(dt){
   const now=performance.now();
   hist.push({t:now,x:userX});
   while(hist.length&&now-hist[0].t>1200)hist.shift();
   let target=userX;
   for(let i=hist.length-1;i>=0;i--){if(now-hist[i].t>=dfReact){target=hist[i].x;break;}}
-  if(!tracking)target=0;                    // 見失ったら中央へ戻る
+  if(!tracking)target=0;
   const dx=target-dfX;
   dfX+=Math.sign(dx)*Math.min(Math.abs(dx),dfSpeed*dt);
-  dfX+=(0-dfX)*0.06*dt;                     // わずかに中央へ寄る癖
   dfX=Math.max(-0.85,Math.min(0.85,dfX));
 }
 
 // ===== drawing =====
+const BONES=[[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
+function drawSkeleton(){
+  if(!lm)return;
+  fctx.save();
+  fctx.strokeStyle='rgba(77,225,255,0.65)';
+  fctx.lineWidth=3;fctx.lineCap='round';
+  const px=p=>({x:(1-p.x)*FW,y:p.y*FH});
+  for(const[a,b]of BONES){
+    if((lm[a].visibility??1)<0.4||(lm[b].visibility??1)<0.4)continue;
+    const A=px(lm[a]),B=px(lm[b]);
+    fctx.beginPath();fctx.moveTo(A.x,A.y);fctx.lineTo(B.x,B.y);fctx.stroke();
+  }
+  fctx.fillStyle='rgba(77,225,255,0.9)';
+  for(const i of[0,11,12,13,14,15,16,23,24,25,26,27,28]){
+    if((lm[i].visibility??1)<0.4)continue;
+    const P=px(lm[i]);
+    fctx.beginPath();fctx.arc(P.x,P.y,4.5,0,7);fctx.fill();
+  }
+  fctx.restore();
+}
 function drawSilhouette(cx,h,alpha,lean){
   const yTop=FH*0.5-h*0.45;
   fctx.save();
@@ -246,17 +259,15 @@ function drawSilhouette(cx,h,alpha,lean){
   fctx.fillText('DF',0,40*u);
   fctx.restore();
 }
-// ゴールゲート：常時はっきり見える柱＋コーン＋旗
 function drawGate(side,open){
-  const x=side<0?FW*0.06:FW*0.94;
-  const topY=FH*0.28,botY=FH*0.88;
+  const x=side<0?FW*0.07:FW*0.93;
+  const topY=FH*0.30,botY=FH*0.88;
   const pulse=0.5+Math.sin(performance.now()/160)*0.25;
-  // 縦の光る柱
   const grad=fctx.createLinearGradient(x,topY,x,botY);
   if(open){
-    grad.addColorStop(0,`rgba(66,215,125,0)`);
+    grad.addColorStop(0,'rgba(66,215,125,0)');
     grad.addColorStop(0.5,`rgba(66,215,125,${0.55*pulse+0.25})`);
-    grad.addColorStop(1,`rgba(66,215,125,0.7)`);
+    grad.addColorStop(1,'rgba(66,215,125,0.7)');
   }else{
     grad.addColorStop(0,'rgba(255,210,63,0)');
     grad.addColorStop(0.5,'rgba(255,210,63,0.35)');
@@ -264,7 +275,6 @@ function drawGate(side,open){
   }
   fctx.fillStyle=grad;
   fctx.fillRect(x-6,topY,12,botY-topY);
-  // コーン
   const h=Math.min(FH*0.13,92);
   fctx.save();
   if(open){fctx.shadowColor='#42d77d';fctx.shadowBlur=24;}
@@ -280,7 +290,6 @@ function drawGate(side,open){
   fctx.fillStyle='#e05f00';
   fctx.fillRect(x-h*0.52,botY-3,h*1.04,6);
   fctx.restore();
-  // ラベル
   fctx.fillStyle=open?'#42d77d':'rgba(255,255,255,0.85)';
   fctx.font='bold 14px sans-serif';fctx.textAlign='center';
   fctx.fillText(open?'GOAL!':'ゴール',x,topY-8);
@@ -291,19 +300,25 @@ const vball={trail:[],anim:null,animT:0,fromX:0,toX:0};
 let stealT=0;
 function draw(dt){
   fctx.clearRect(0,0,FW,FH);
-  if(state==='idle')return;
+  if(state==='idle'||state==='loading')return;
+  drawSkeleton();
+  if(state==='position'){
+    // 立ち位置ガイド枠
+    const ok=bodyOK&&Math.abs(userX)<0.3;
+    fctx.strokeStyle=ok?'rgba(66,215,125,0.9)':'rgba(255,210,63,0.8)';
+    fctx.setLineDash([12,10]);fctx.lineWidth=4;
+    fctx.strokeRect(FW*0.22,FH*0.10,FW*0.56,FH*0.82);
+    fctx.setLineDash([]);
+    return;
+  }
   const landscape=FW>FH;
   const dfH=landscape?FH*0.74:FH*0.56;
   const range=FW*0.40;
   const sep=Math.abs(userX-dfX);
-  const cleared=sep>0.45;
-  // ゲート（常時表示）
+  const cleared=sep>0.42;
   drawGate(-1,cleared&&userX<dfX);
   drawGate(1,cleared&&userX>dfX);
-  // DF
-  const dfPx=FW/2+dfX*range;
-  drawSilhouette(dfPx,dfH,0.36,userX-dfX);
-  // あなた側
+  drawSilhouette(FW/2+dfX*range,dfH,0.36,userX-dfX);
   const uPx=FW/2+userX*range;
   if(mode==='virtual'){
     let bx=uPx,by=FH*0.80;
@@ -332,52 +347,78 @@ function draw(dt){
     fctx.strokeStyle='rgba(255,210,63,0.9)';fctx.lineWidth=3;
     fctx.beginPath();fctx.ellipse(uPx,FH*0.84,26,10,0,0,7);fctx.stroke();
   }
-  // YOUマーカー
-  fctx.fillStyle=tracking?'#ffd23f':'#888';
-  fctx.beginPath();
-  fctx.moveTo(uPx,FH*0.15);fctx.lineTo(uPx-9,FH*0.15-14);fctx.lineTo(uPx+9,FH*0.15-14);
-  fctx.closePath();fctx.fill();
-  fctx.font='bold 11px sans-serif';fctx.textAlign='center';
-  fctx.fillText('YOU',uPx,FH*0.15-20);
-  $('sepFill').style.width=Math.min(100,sep/0.45*72)+'%';
+  $('sepFill').style.width=Math.min(100,sep/0.42*72)+'%';
 }
 
-// ===== game flow =====
+// ===== flow =====
 let roundT=0,roundDur=12000,phase=null;
+async function countdown(n=3){
+  state='countdown';
+  for(let i=n;i>=1;i--){
+    bigMsg(String(i),'var(--gold)',700);
+    beep(700,0.12);vib(30);
+    await new Promise(r=>setTimeout(r,800));
+  }
+  bigMsg('GO!','var(--ok)',700);
+  beep(1200,0.25,'square',0.3);speak('ゴー！');vib([40,40]);
+}
+async function startPositioning(){
+  state='position';
+  CUE.textContent='枠の中に全身が入るように立って';
+  SUB.textContent='スマホから離れて、頭から足まで映るように';
+  let okT=0,last=performance.now();
+  await new Promise(res=>{
+    const iv=setInterval(()=>{
+      const now=performance.now(),dt=(now-last)/1000;last=now;
+      const ok=bodyOK&&Math.abs(userX)<0.3;
+      if(ok){okT+=dt;
+        SUB.textContent=`そのまま… ${Math.max(0,(1.2-okT)).toFixed(1)}`;
+      }else{okT=0;
+        SUB.textContent=tracking?(bodyOK?'中央に立って':'もう少し下がって全身を映して'):'あなたを探しています…';
+      }
+      if(okT>1.2){clearInterval(iv);res();}
+    },100);
+  });
+  CUE.textContent='';SUB.textContent='';
+  bigMsg('位置OK!','var(--ok)',700);beep(900,0.15);
+  await new Promise(r=>setTimeout(r,750));
+  await countdown(3);
+  nextRound();
+}
 function nextRound(){
   round++;timerBar(0);stealT=0;
   if(round>TOTAL)return endGame();
   $('lvl').textContent=round;
-  dfSpeed=1.4+round*0.22;
+  dfSpeed=1.3+round*0.22;
   dfReact=Math.max(170,420-round*36);
-  dfX=0;hist=[];                    // DFは毎ラウンド中央スタート
+  dfX=0;hist=[];
   state='play';phase='play';roundT=performance.now();
-  CUE.textContent=`ラウンド ${round}／振り切ってゲートへ！`;
+  CUE.textContent=`ラウンド ${round}／振り切ってゴールへ！`;
   SUB.textContent='左右に揺さぶって、逆を取れ';
-  speak('抜け出せ！');vib(30);
+  vib(30);
 }
 function judge(dt){
   const now=performance.now();
   const el=(now-roundT)/roundDur;
   timerBar(Math.min(1,el));
   const sep=Math.abs(userX-dfX);
-  if(Math.abs(userX)>0.70&&sep>0.45){
+  if(Math.abs(userX)>0.62&&sep>0.42){
     phase='feedback';
     score++;$('score').textContent=score;
     if(mode==='virtual'){
       vball.fromX=FW/2+userX*FW*0.40;
-      vball.toX=userX>0?FW*0.94:FW*0.06;
+      vball.toX=userX>0?FW*0.93:FW*0.07;
       vball.anim='fly';vball.animT=0;
     }
-    bigMsg('ゴール!!','var(--gold)');speak('ゴール！');vib([40,30,100]);
+    bigMsg('ゴール!!','var(--gold)');beep(1000,0.3,'square',0.3);speak('ゴール！');vib([40,30,100]);
     CUE.textContent='';SUB.textContent='';
-    setTimeout(nextRound,1400);
+    setTimeout(()=>{resetRound();},1400);
     return;
   }
-  if(Math.abs(userX)>0.70&&sep<=0.45&&phase==='play'){
+  if(Math.abs(userX)>0.62&&sep<=0.42&&phase==='play'){
     if(!judge.blockCool||now-judge.blockCool>1500){
       judge.blockCool=now;
-      bigMsg('まだ付かれてる!','var(--blue)',600);
+      bigMsg('まだ付かれてる!','var(--blue)',600);beep(300,0.15);
       SUB.textContent='一度中央へ戻って、揺さぶり直せ！';
       vib(60);
     }
@@ -388,18 +429,34 @@ function judge(dt){
       phase='feedback';
       vball.fromX=FW/2+userX*FW*0.40;
       vball.anim='steal';vball.animT=0;
-      bigMsg('奪われた!','var(--ng)');speak('取られた！');vib(150);
+      bigMsg('奪われた!','var(--ng)');beep(220,0.3);speak('取られた！');vib(150);
       CUE.textContent='';SUB.textContent='';
-      setTimeout(nextRound,1100);
+      setTimeout(()=>{resetRound();},1100);
       return;
     }
   }
   if(el>=1){
     phase='feedback';
-    bigMsg('タイムアップ','var(--ng)');speak('タイムアップ');vib(120);
+    bigMsg('タイムアップ','var(--ng)');beep(220,0.3);vib(120);
     CUE.textContent='';SUB.textContent='';
-    setTimeout(nextRound,1100);
+    setTimeout(()=>{resetRound();},1100);
   }
+}
+// ラウンド間：中央に戻ってから短いカウントで再開
+async function resetRound(){
+  if(round>=TOTAL){nextRound();return;}
+  state='reset';phase=null;timerBar(0);
+  CUE.textContent='中央に戻って';SUB.textContent='';
+  let okT=0,last=performance.now();
+  await new Promise(res=>{
+    const iv=setInterval(()=>{
+      const now=performance.now(),dt=(now-last)/1000;last=now;
+      if(tracking&&Math.abs(userX)<0.25)okT+=dt;else okT=0;
+      if(okT>0.7){clearInterval(iv);res();}
+    },100);
+  });
+  await countdown(2);
+  nextRound();
 }
 function endGame(){
   state='done';timerBar(0);
@@ -413,44 +470,16 @@ function endGame(){
   speak('お疲れさま');
 }
 
-// ===== 2段階キャリブレーション =====
-function startCalib(){
-  state='calib';
-  // 第1段階：静止してノイズ地図を作る
-  CUE.textContent='① 中央に立って、静止して';
-  SUB.textContent='背景ノイズを学習中…';
-  colNoise.fill(0);colE.fill(0);userX=0;dfX=0;
-  const acc=new Float32Array(AC);let n=0;
-  const t0=performance.now();
-  const iv=setInterval(()=>{
-    const col=rawCols();
-    for(let x=0;x<AC;x++)acc[x]=Math.max(acc[x],col[x]); // 最大値でノイズ地図
-    n++;
-    const sec=(performance.now()-t0)/1000;
-    SUB.textContent=`背景ノイズを学習中… ${Math.max(0,(2.5-sec)).toFixed(1)}`;
-    if(sec>2.5){
-      clearInterval(iv);
-      for(let x=0;x<AC;x++)colNoise[x]=acc[x];
-      // 第2段階：動いてトラッキング確認
-      CUE.textContent='② 左右に1歩ずつ動いてみて';
-      SUB.textContent='黄色いYOUマーカーが付いてくればOK！';
-      const t1=performance.now();
-      const iv2=setInterval(()=>{
-        track();
-        const sec2=(performance.now()-t1)/1000;
-        if(sec2>3.5){clearInterval(iv2);nextRound();}
-      },60);
-    }
-  },60);
-}
 let lastT=0;
 function loop(t){
   requestAnimationFrame(loop);
   const dt=Math.min((t-lastT)/1000,0.05);lastT=t;
-  if(stream&&video.readyState>=2&&state==='play'){
-    track();
-    dfUpdate(dt);
-    if(phase==='play')judge(dt);
+  if(stream&&state!=='idle'&&state!=='loading'){
+    updatePose();
+    if(state==='play'){
+      dfUpdate(dt);
+      if(phase==='play')judge(dt);
+    }
   }
   draw(dt);
 }
@@ -463,24 +492,41 @@ function selMode(m){
 $('modeReal').addEventListener('click',()=>selMode('real'));
 $('modeVirtual').addEventListener('click',()=>selMode('virtual'));
 $('startBtn').addEventListener('click',async()=>{
+  const btn=$('startBtn');
   $('err').style.display='none';
-  if(!stream){
-    try{
+  btn.disabled=true;
+  try{
+    if(!stream){
+      btn.textContent='カメラ起動中…';
       stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640}},audio:false});
       video.srcObject=stream;await video.play();
-    }catch(e){
-      $('err').style.display='block';
-      $('err').innerHTML='カメラを起動できませんでした（'+e.name+'）。ブラウザのカメラ許可を確認してください。';
-      return;
     }
+    if(!pose){
+      btn.textContent='AIモデル読込中…（初回は少し待つ）';
+      const vision=await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+      pose=await PoseLandmarker.createFromOptions(vision,{
+        baseOptions:{
+          modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+          delegate:"GPU"
+        },
+        runningMode:"VIDEO",numPoses:1
+      });
+    }
+  }catch(e){
+    $('err').style.display='block';
+    $('err').innerHTML='起動できませんでした（'+(e.name||e.message)+'）。<br>カメラ許可と通信環境を確認して、もう一度押してください。';
+    btn.disabled=false;btn.textContent='もう一度試す';
+    return;
   }
+  btn.disabled=false;btn.textContent='もう一回';
   round=0;score=0;
   $('score').textContent=0;$('lvl').textContent=1;
+  document.querySelector('.card h1').innerHTML='<em>1vs1</em>チャレンジ';
   $('overlay').classList.add('hide');
-  setTimeout(startCalib,500);
+  startPositioning();
 });
 requestAnimationFrame(loop);
-})();
 </script>
 </body>
 </html>
