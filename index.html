@@ -35,7 +35,7 @@
   #big.show{opacity:1;transform:scale(1)}
   #timerBar{position:fixed;top:0;left:0;height:4px;background:var(--gold);width:0%;z-index:8}
   #sepWrap{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0));left:50%;
-    transform:translateX(-50%);width:70%;max-width:330px;z-index:5;text-align:center;pointer-events:none}
+    transform:translateX(-50%);width:64%;max-width:300px;z-index:5;text-align:center;pointer-events:none}
   #sepLbl{font-size:10px;letter-spacing:.2em;opacity:.7;margin-bottom:4px}
   #sep{height:9px;border-radius:99px;background:#ffffff20;overflow:hidden}
   #sepFill{height:100%;width:0%;border-radius:99px;
@@ -45,8 +45,9 @@
   #overlay.hide{display:none}
   .card{text-align:center;padding:26px 22px;max-width:390px;width:100%}
   .kick{font-size:11px;letter-spacing:.35em;color:var(--gold);margin-bottom:10px}
-  .card h1{font-size:29px;font-weight:900;line-height:1.25;margin-bottom:14px}
+  .card h1{font-size:29px;font-weight:900;line-height:1.25;margin-bottom:6px}
   .card h1 em{color:var(--kit);font-style:normal}
+  .ver{font-size:10px;opacity:.5;margin-bottom:12px;letter-spacing:.1em}
   .modeRow{display:block}
   .modeBtn{display:block;width:100%;border:2px solid #ffffff22;border-radius:18px;
     background:#ffffff10;color:var(--ink);font-family:inherit;text-align:left;
@@ -70,10 +71,10 @@
     #cue{top:calc(52px + env(safe-area-inset-top,0));font-size:16px}
     #sub{top:calc(76px + env(safe-area-inset-top,0));font-size:11px}
     #big{font-size:min(12vw,80px)}
-    #sepWrap{bottom:calc(8px + env(safe-area-inset-bottom,0));width:42%}
+    #sepWrap{bottom:calc(8px + env(safe-area-inset-bottom,0));width:40%}
     #overlay{align-items:flex-start}
     .card{max-width:660px;padding:16px 24px calc(16px + env(safe-area-inset-bottom,0))}
-    .card h1{font-size:22px;margin-bottom:10px}
+    .card h1{font-size:22px}
     .modeRow{display:flex;gap:10px}
     .steps{margin-bottom:10px}
   }
@@ -103,6 +104,7 @@
   <div class="card">
     <div class="kick">FACE TO FACE</div>
     <h1><em>1vs1</em>チャレンジ</h1>
+    <div class="ver">v4</div>
     <div id="resultBox">
       <div class="bigv" id="rScore"></div>
       <div class="sub" id="rDetail"></div>
@@ -111,19 +113,19 @@
       <div class="modeRow">
       <button class="modeBtn sel" id="modeReal">
         <div class="mt">⚽ 実ボールモード</div>
-        <div class="md">足元にボールを置き、DFシルエットと正面で対峙。フェイントで振り切って、ボールごと左右のコーン（ゴール）へ！</div>
+        <div class="md">足元にボールを置き、中央のDFシルエットと正面で対峙。振り切って、ボールごと左右のゴールゲートへ！</div>
       </button>
       <button class="modeBtn" id="modeVirtual">
         <div class="mt">🎮 仮想ボールモード</div>
-        <div class="md">仮想ボールがあなたの足元についてくる。DFに近づかれすぎるとボールを奪われる！振り切ってコーンへ運べばゴール。</div>
+        <div class="md">仮想ボールが足元についてくる。DFに密着されると奪われる！振り切ってゲートへ運べばゴール。</div>
       </button>
       </div>
       <div class="steps">
-        📱 スマホを立てかけて2〜3歩さがり、<b>全身が映る</b>位置へ<br>
-        🔴 DFシルエットが正面から<b>あなたを追ってマーク</b>してくる<br>
-        🟡 画面上部の<b>緑ランプ＝あなたを検知中</b>のサイン<br>
-        ⚡ 揺さぶって逆を取り、<b>完全に振り切った状態</b>で<br>
-        🔶 左右どちらかの<b>コーンまで動けば1点</b>！
+        📱 全身が映る位置へ（2〜3歩さがる）<br>
+        🧍 最初に「静止→左右に動く」の2段階でカメラ調整<br>
+        🟡 黄色い<b>YOUマーカー</b>があなたの検知位置<br>
+        🔴 中央のDFが遅れて追ってくる → 逆を取れ！<br>
+        🥅 <b>振り切った状態で左右のゲートまで動けば1点</b>
       </div>
     </div>
     <button class="mainBtn" id="startBtn">カメラを起動してキックオフ</button>
@@ -151,7 +153,6 @@ function bigMsg(t,c,ms=850){BIG.textContent=t;BIG.style.color=c||'#fff';
   BIG.classList.add('show');setTimeout(()=>BIG.classList.remove('show'),ms);}
 function timerBar(p){$('timerBar').style.width=(p*100)+'%';}
 
-// ===== canvas =====
 const fx=$('fx'),fctx=fx.getContext('2d');
 let FW=0,FH=0;
 function fxResize(){FW=innerWidth;FH=innerHeight;
@@ -159,54 +160,60 @@ function fxResize(){FW=innerWidth;FH=innerHeight;
   fx.width=FW*d;fx.height=FH*d;fctx.setTransform(d,0,0,d,0,0);}
 addEventListener('resize',fxResize);fxResize();
 
-// ===== tracking v2：列ごとの「動きエネルギー蓄積マップ」 =====
-// 動いた列にエネルギーが溜まり、ゆっくり減衰 → 止まっていても直前の位置を保持できる
+// ===== tracking v3 =====
+// キャリブレーションで「列ごとのノイズ地図」を作り、それを差し引いた動きだけを見る。
+// これでカーテン・テレビ・照明のちらつき等の固定ノイズ源に引っ張られない。
 const colE=new Float32Array(AC);
-let userX=0,tracking=false,noiseFloor=3;
-function track(){
+const colNoise=new Float32Array(AC);
+let userX=0,tracking=false;
+function rawCols(){
   actx.save();actx.scale(-1,1);actx.drawImage(video,-AC,0,AC,AR);actx.restore();
   const cur=actx.getImageData(0,0,AC,AR).data;
-  const colNow=new Float32Array(AC);
-  let moved=0;
+  const col=new Float32Array(AC);
   if(prevF){
     for(let y=0;y<AR;y+=2){
       for(let x=0;x<AC;x++){
         const i=(y*AC+x)*4;
         const d=Math.abs(cur[i]-prevF[i])+Math.abs(cur[i+1]-prevF[i+1])+Math.abs(cur[i+2]-prevF[i+2]);
-        if(d>48){colNow[x]++;moved++;}
+        if(d>46)col[x]++;
       }
     }
   }
   prevF=cur.slice();
-  // 蓄積＆減衰
-  let P=0,SX=0,peak=0;
+  return col;
+}
+function track(){
+  const col=rawCols();
+  let P=0,SX=0;
   for(let x=0;x<AC;x++){
-    colE[x]=colE[x]*0.88+colNow[x];
+    const adj=Math.max(0,col[x]-(colNoise[x]*1.8+0.4)); // ノイズ地図を差し引く
+    colE[x]=colE[x]*0.90+adj;
     P+=colE[x];SX+=colE[x]*x;
-    if(colE[x]>peak)peak=colE[x];
   }
-  tracking=(moved>noiseFloor*2+4)||(P>noiseFloor*10+30);
-  if(P>noiseFloor*8+20){
-    const cx=(SX/P)/(AC-1)*2-1;          // -1..1（ミラー済み）
-    userX+=(cx-userX)*0.5;               // 素早く追従
+  tracking=P>10;
+  if(P>8){
+    const cx=(SX/P)/(AC-1)*2-1;
+    userX+=(cx-userX)*0.5;
+    userX=Math.max(-1,Math.min(1,userX));
   }
   $('dot').classList.toggle('on',tracking);
   $('trackLbl').textContent=tracking?'検知中':'動いて位置を教えて';
-  return moved;
 }
 
-// ===== defender：遅延＋速度制限つき追跡 =====
+// ===== defender：中央基点＋遅延追跡 =====
 let dfX=0,hist=[];
-let dfSpeed=1.2,dfReact=400;
+let dfSpeed=1.6,dfReact=380;
 function dfUpdate(dt){
   const now=performance.now();
   hist.push({t:now,x:userX});
   while(hist.length&&now-hist[0].t>1200)hist.shift();
   let target=userX;
   for(let i=hist.length-1;i>=0;i--){if(now-hist[i].t>=dfReact){target=hist[i].x;break;}}
+  if(!tracking)target=0;                    // 見失ったら中央へ戻る
   const dx=target-dfX;
   dfX+=Math.sign(dx)*Math.min(Math.abs(dx),dfSpeed*dt);
-  dfX=Math.max(-1,Math.min(1,dfX));
+  dfX+=(0-dfX)*0.06*dt;                     // わずかに中央へ寄る癖
+  dfX=Math.max(-0.85,Math.min(0.85,dfX));
 }
 
 // ===== drawing =====
@@ -214,7 +221,7 @@ function drawSilhouette(cx,h,alpha,lean){
   const yTop=FH*0.5-h*0.45;
   fctx.save();
   fctx.translate(cx,yTop);
-  fctx.rotate(lean*0.08);
+  fctx.rotate(Math.max(-0.12,Math.min(0.12,lean*0.1)));
   fctx.fillStyle=`rgba(255,55,55,${alpha})`;
   fctx.strokeStyle=`rgba(255,130,110,${Math.min(1,alpha+0.2)})`;
   fctx.lineWidth=3;
@@ -237,31 +244,46 @@ function drawSilhouette(cx,h,alpha,lean){
   fctx.fillText('DF',0,40*u);
   fctx.restore();
 }
-function drawCone(cx,baseY,h,glow){
+// ゴールゲート：常時はっきり見える柱＋コーン＋旗
+function drawGate(side,open){
+  const x=side<0?FW*0.06:FW*0.94;
+  const topY=FH*0.28,botY=FH*0.88;
+  const pulse=0.5+Math.sin(performance.now()/160)*0.25;
+  // 縦の光る柱
+  const grad=fctx.createLinearGradient(x,topY,x,botY);
+  if(open){
+    grad.addColorStop(0,`rgba(66,215,125,0)`);
+    grad.addColorStop(0.5,`rgba(66,215,125,${0.55*pulse+0.25})`);
+    grad.addColorStop(1,`rgba(66,215,125,0.7)`);
+  }else{
+    grad.addColorStop(0,'rgba(255,210,63,0)');
+    grad.addColorStop(0.5,'rgba(255,210,63,0.35)');
+    grad.addColorStop(1,'rgba(255,210,63,0.55)');
+  }
+  fctx.fillStyle=grad;
+  fctx.fillRect(x-6,topY,12,botY-topY);
+  // コーン
+  const h=Math.min(FH*0.13,92);
   fctx.save();
-  if(glow){fctx.shadowColor='#42d77d';fctx.shadowBlur=22;}
-  // コーン本体
+  if(open){fctx.shadowColor='#42d77d';fctx.shadowBlur=24;}
   fctx.fillStyle='#ff7b1f';
   fctx.beginPath();
-  fctx.moveTo(cx,baseY-h);
-  fctx.lineTo(cx-h*0.42,baseY);
-  fctx.lineTo(cx+h*0.42,baseY);
+  fctx.moveTo(x,botY-h);fctx.lineTo(x-h*0.44,botY);fctx.lineTo(x+h*0.44,botY);
   fctx.closePath();fctx.fill();
-  // 白帯
   fctx.fillStyle='#fff';
   fctx.beginPath();
-  fctx.moveTo(cx-h*0.19,baseY-h*0.52);fctx.lineTo(cx+h*0.19,baseY-h*0.52);
-  fctx.lineTo(cx+h*0.26,baseY-h*0.34);fctx.lineTo(cx-h*0.26,baseY-h*0.34);
+  fctx.moveTo(x-h*0.2,botY-h*0.52);fctx.lineTo(x+h*0.2,botY-h*0.52);
+  fctx.lineTo(x+h*0.27,botY-h*0.34);fctx.lineTo(x-h*0.27,botY-h*0.34);
   fctx.closePath();fctx.fill();
-  // 台座
   fctx.fillStyle='#e05f00';
-  fctx.fillRect(cx-h*0.5,baseY-3,h,6);
+  fctx.fillRect(x-h*0.52,botY-3,h*1.04,6);
   fctx.restore();
-  if(glow){
-    fctx.fillStyle='#42d77d';
-    fctx.font='bold 13px sans-serif';fctx.textAlign='center';
-    fctx.fillText('GOAL!',cx,baseY-h-10);
-  }
+  // ラベル
+  fctx.fillStyle=open?'#42d77d':'rgba(255,255,255,0.85)';
+  fctx.font='bold 14px sans-serif';fctx.textAlign='center';
+  fctx.fillText(open?'GOAL!':'ゴール',x,topY-8);
+  fctx.font='20px sans-serif';
+  fctx.fillText('🚩',x,topY+18);
 }
 const vball={trail:[],anim:null,animT:0,fromX:0,toX:0};
 let stealT=0;
@@ -272,16 +294,14 @@ function draw(dt){
   const dfH=landscape?FH*0.74:FH*0.56;
   const range=FW*0.40;
   const sep=Math.abs(userX-dfX);
-  const cleared=sep>0.5;
-  // コーン（左右のゴール）
-  const coneH=Math.min(FH*0.11,80);
-  const coneX=[FW*0.055,FW*0.945];
-  drawCone(coneX[0],FH*0.86,coneH,cleared&&userX<dfX);
-  drawCone(coneX[1],FH*0.86,coneH,cleared&&userX>dfX);
-  // DFシルエット（あなたの方へ体を傾ける）
+  const cleared=sep>0.45;
+  // ゲート（常時表示）
+  drawGate(-1,cleared&&userX<dfX);
+  drawGate(1,cleared&&userX>dfX);
+  // DF
   const dfPx=FW/2+dfX*range;
   drawSilhouette(dfPx,dfH,0.36,userX-dfX);
-  // あなた側：リング or 仮想ボール
+  // あなた側
   const uPx=FW/2+userX*range;
   if(mode==='virtual'){
     let bx=uPx,by=FH*0.80;
@@ -310,15 +330,14 @@ function draw(dt){
     fctx.strokeStyle='rgba(255,210,63,0.9)';fctx.lineWidth=3;
     fctx.beginPath();fctx.ellipse(uPx,FH*0.84,26,10,0,0,7);fctx.stroke();
   }
-  // YOUマーカー（検知位置の見える化）
+  // YOUマーカー
   fctx.fillStyle=tracking?'#ffd23f':'#888';
   fctx.beginPath();
-  fctx.moveTo(uPx,FH*0.13);fctx.lineTo(uPx-9,FH*0.13-14);fctx.lineTo(uPx+9,FH*0.13-14);
+  fctx.moveTo(uPx,FH*0.15);fctx.lineTo(uPx-9,FH*0.15-14);fctx.lineTo(uPx+9,FH*0.15-14);
   fctx.closePath();fctx.fill();
   fctx.font='bold 11px sans-serif';fctx.textAlign='center';
-  fctx.fillText('YOU',uPx,FH*0.13-20);
-  // ゲージ
-  $('sepFill').style.width=Math.min(100,sep/0.5*75)+'%';
+  fctx.fillText('YOU',uPx,FH*0.15-20);
+  $('sepFill').style.width=Math.min(100,sep/0.45*72)+'%';
 }
 
 // ===== game flow =====
@@ -327,11 +346,11 @@ function nextRound(){
   round++;timerBar(0);stealT=0;
   if(round>TOTAL)return endGame();
   $('lvl').textContent=round;
-  dfSpeed=1.0+round*0.28;
-  dfReact=Math.max(180,440-round*38);
-  dfX=0;hist=[];
+  dfSpeed=1.4+round*0.22;
+  dfReact=Math.max(170,420-round*36);
+  dfX=0;hist=[];                    // DFは毎ラウンド中央スタート
   state='play';phase='play';roundT=performance.now();
-  CUE.textContent=`ラウンド ${round}／DFを振り切ってコーンへ！`;
+  CUE.textContent=`ラウンド ${round}／振り切ってゲートへ！`;
   SUB.textContent='左右に揺さぶって、逆を取れ';
   speak('抜け出せ！');vib(30);
 }
@@ -340,13 +359,12 @@ function judge(dt){
   const el=(now-roundT)/roundDur;
   timerBar(Math.min(1,el));
   const sep=Math.abs(userX-dfX);
-  // ゴール：コーン到達（|userX|>0.72）かつ 完全に振り切っている（sep>0.5）
-  if(Math.abs(userX)>0.72&&sep>0.5){
+  if(Math.abs(userX)>0.70&&sep>0.45){
     phase='feedback';
     score++;$('score').textContent=score;
     if(mode==='virtual'){
       vball.fromX=FW/2+userX*FW*0.40;
-      vball.toX=userX>0?FW*0.945:FW*0.055;
+      vball.toX=userX>0?FW*0.94:FW*0.06;
       vball.anim='fly';vball.animT=0;
     }
     bigMsg('ゴール!!','var(--gold)');speak('ゴール！');vib([40,30,100]);
@@ -354,8 +372,7 @@ function judge(dt){
     setTimeout(nextRound,1400);
     return;
   }
-  // コーンに来たがDFがまだ近い
-  if(Math.abs(userX)>0.72&&sep<=0.5&&phase==='play'){
+  if(Math.abs(userX)>0.70&&sep<=0.45&&phase==='play'){
     if(!judge.blockCool||now-judge.blockCool>1500){
       judge.blockCool=now;
       bigMsg('まだ付かれてる!','var(--blue)',600);
@@ -363,7 +380,6 @@ function judge(dt){
       vib(60);
     }
   }
-  // 仮想ボール：DFに密着され続けると奪われる
   if(mode==='virtual'){
     if(sep<0.13)stealT+=dt;else stealT=Math.max(0,stealT-dt*2);
     if(stealT>0.8){
@@ -395,39 +411,48 @@ function endGame(){
   speak('お疲れさま');
 }
 
-// ===== calib & loop =====
+// ===== 2段階キャリブレーション =====
 function startCalib(){
   state='calib';
-  CUE.textContent='中央に立って、その場で軽く体を揺らして';
-  SUB.textContent='あなたの位置を覚えます…';
-  let samples=[],t0=performance.now();
+  // 第1段階：静止してノイズ地図を作る
+  CUE.textContent='① 中央に立って、静止して';
+  SUB.textContent='背景ノイズを学習中…';
+  colNoise.fill(0);colE.fill(0);userX=0;dfX=0;
+  const acc=new Float32Array(AC);let n=0;
+  const t0=performance.now();
   const iv=setInterval(()=>{
-    const s=track();samples.push(s);
+    const col=rawCols();
+    for(let x=0;x<AC;x++)acc[x]=Math.max(acc[x],col[x]); // 最大値でノイズ地図
+    n++;
     const sec=(performance.now()-t0)/1000;
-    SUB.textContent=`位置を検知中… ${Math.max(0,(3-sec)).toFixed(1)}（YOUマーカーが自分に付いていればOK）`;
-    if(sec>3){
+    SUB.textContent=`背景ノイズを学習中… ${Math.max(0,(2.5-sec)).toFixed(1)}`;
+    if(sec>2.5){
       clearInterval(iv);
-      samples.sort((x,y)=>x-y);
-      noiseFloor=Math.max(2,samples[Math.floor(samples.length*0.2)]);
-      nextRound();
+      for(let x=0;x<AC;x++)colNoise[x]=acc[x];
+      // 第2段階：動いてトラッキング確認
+      CUE.textContent='② 左右に1歩ずつ動いてみて';
+      SUB.textContent='黄色いYOUマーカーが付いてくればOK！';
+      const t1=performance.now();
+      const iv2=setInterval(()=>{
+        track();
+        const sec2=(performance.now()-t1)/1000;
+        if(sec2>3.5){clearInterval(iv2);nextRound();}
+      },60);
     }
-  },80);
+  },60);
 }
 let lastT=0;
 function loop(t){
   requestAnimationFrame(loop);
   const dt=Math.min((t-lastT)/1000,0.05);lastT=t;
-  if(stream&&video.readyState>=2&&(state==='play'||state==='calib')){
-    if(state==='play'){
-      track();
-      dfUpdate(dt);
-      if(phase==='play')judge(dt);
-    }
+  if(stream&&video.readyState>=2&&state==='play'){
+    track();
+    dfUpdate(dt);
+    if(phase==='play')judge(dt);
   }
   draw(dt);
 }
 
-// ===== UI =====
 function selMode(m){
   mode=m;
   $('modeReal').classList.toggle('sel',m==='real');
