@@ -19,24 +19,27 @@
   .hb{text-align:center;line-height:1.05}
   .hb .l{font-size:9px;letter-spacing:.2em;opacity:.65}
   .hb .v{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
-  #cue{position:fixed;top:calc(58px + env(safe-area-inset-top,0));left:0;right:0;text-align:center;z-index:5;
+  #track{position:fixed;top:calc(14px + env(safe-area-inset-top,0));left:50%;transform:translateX(-50%);
+    z-index:6;font-size:10px;letter-spacing:.15em;padding:4px 12px;border-radius:99px;
+    background:#00000088;pointer-events:none;display:flex;align-items:center;gap:6px}
+  #dot{width:8px;height:8px;border-radius:50%;background:#666}
+  #dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  #cue{position:fixed;top:calc(64px + env(safe-area-inset-top,0));left:0;right:0;text-align:center;z-index:5;
     pointer-events:none;font-size:19px;font-weight:900;letter-spacing:.04em;
     text-shadow:0 3px 16px #000;min-height:28px;padding:0 14px}
-  #sub{position:fixed;top:calc(88px + env(safe-area-inset-top,0));left:0;right:0;text-align:center;z-index:5;
+  #sub{position:fixed;top:calc(94px + env(safe-area-inset-top,0));left:0;right:0;text-align:center;z-index:5;
     pointer-events:none;font-size:12px;opacity:.85;text-shadow:0 2px 10px #000}
   #big{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:7;
     font-size:min(18vw,96px);font-weight:900;text-shadow:0 6px 30px #000;text-align:center;line-height:1.2;
     opacity:0;pointer-events:none;transition:opacity .15s,transform .15s;transform:scale(.7)}
   #big.show{opacity:1;transform:scale(1)}
   #timerBar{position:fixed;top:0;left:0;height:4px;background:var(--gold);width:0%;z-index:8}
-  /* separation gauge */
   #sepWrap{position:fixed;bottom:calc(14px + env(safe-area-inset-bottom,0));left:50%;
     transform:translateX(-50%);width:70%;max-width:330px;z-index:5;text-align:center;pointer-events:none}
-  #sepLbl{font-size:10px;letter-spacing:.2em;opacity:.65;margin-bottom:4px}
+  #sepLbl{font-size:10px;letter-spacing:.2em;opacity:.7;margin-bottom:4px}
   #sep{height:9px;border-radius:99px;background:#ffffff20;overflow:hidden}
-  #sepFill{height:100%;width:0%;border-radius:99px;transition:width .1s;
-    background:linear-gradient(90deg,var(--blue),var(--gold),var(--ok))}
-  /* overlay */
+  #sepFill{height:100%;width:0%;border-radius:99px;
+    background:linear-gradient(90deg,var(--ng),var(--gold),var(--ok))}
   #overlay{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
     background:radial-gradient(ellipse at 50% 30%,#132a1c 0%,#050a07 78%);overflow-y:auto}
   #overlay.hide{display:none}
@@ -64,8 +67,8 @@
     border-radius:12px;padding:12px;margin-top:14px;text-align:left}
   @media (orientation: landscape) and (max-height: 520px){
     .hb .v{font-size:19px}.hb .l{font-size:8px}
-    #cue{top:calc(46px + env(safe-area-inset-top,0));font-size:16px}
-    #sub{top:calc(70px + env(safe-area-inset-top,0));font-size:11px}
+    #cue{top:calc(52px + env(safe-area-inset-top,0));font-size:16px}
+    #sub{top:calc(76px + env(safe-area-inset-top,0));font-size:11px}
     #big{font-size:min(12vw,80px)}
     #sepWrap{bottom:calc(8px + env(safe-area-inset-bottom,0));width:42%}
     #overlay{align-items:flex-start}
@@ -83,21 +86,22 @@
 <div id="timerBar"></div>
 
 <div id="hud">
-  <div class="hb"><div class="l">突破</div><div class="v" id="score" style="color:var(--ok)">0</div></div>
-  <div class="hb"><div class="l">ROUND</div><div class="v" id="round">-</div></div>
+  <div class="hb"><div class="l">ゴール</div><div class="v" id="score" style="color:var(--ok)">0</div></div>
+  <div class="hb" style="width:120px"></div>
   <div class="hb"><div class="l">DFレベル</div><div class="v" id="lvl" style="color:var(--blue)">1</div></div>
 </div>
+<div id="track"><span id="dot"></span><span id="trackLbl">検知待ち</span></div>
 <div id="cue"></div><div id="sub"></div>
 <div id="big"></div>
 
 <div id="sepWrap">
-  <div id="sepLbl">DFとの距離　—　引き離してゲートへ！</div>
+  <div id="sepLbl">DFを振り切れ！</div>
   <div id="sep"><div id="sepFill"></div></div>
 </div>
 
 <div id="overlay">
   <div class="card">
-    <div class="kick">SILHOUETTE DEFENDER</div>
+    <div class="kick">FACE TO FACE</div>
     <h1><em>1vs1</em>チャレンジ</h1>
     <div id="resultBox">
       <div class="bigv" id="rScore"></div>
@@ -107,18 +111,19 @@
       <div class="modeRow">
       <button class="modeBtn sel" id="modeReal">
         <div class="mt">⚽ 実ボールモード</div>
-        <div class="md">足元にボールを置いてプレー。画面のDFシルエットがあなたを追いかける。フェイントで逆を取り、ボールごと左右のゲートへ抜ければ突破！</div>
+        <div class="md">足元にボールを置き、DFシルエットと正面で対峙。フェイントで振り切って、ボールごと左右のコーン（ゴール）へ！</div>
       </button>
       <button class="modeBtn" id="modeVirtual">
         <div class="mt">🎮 仮想ボールモード</div>
-        <div class="md">画面上の仮想ボールがあなたの動きについてくる。DFを引き離してゲートへ抜けると、ボールがゴールへ飛び込む！室内・ボール無しでOK。</div>
+        <div class="md">仮想ボールがあなたの足元についてくる。DFに近づかれすぎるとボールを奪われる！振り切ってコーンへ運べばゴール。</div>
       </button>
       </div>
       <div class="steps">
-        📱 スマホを立てかけて2〜3歩さがり、<b>全身が映る</b>位置へ。<br>
-        🕺 DFはあなたの動きを<b>少し遅れて</b>追ってくる。<br>
-        ⚡ 左右に揺さぶって→逆へ一気にサイドステップ！<br>
-        🥅 DFを引き離した状態で画面の<b>左右どちらかの端</b>まで動けば突破。
+        📱 スマホを立てかけて2〜3歩さがり、<b>全身が映る</b>位置へ<br>
+        🔴 DFシルエットが正面から<b>あなたを追ってマーク</b>してくる<br>
+        🟡 画面上部の<b>緑ランプ＝あなたを検知中</b>のサイン<br>
+        ⚡ 揺さぶって逆を取り、<b>完全に振り切った状態</b>で<br>
+        🔶 左右どちらかの<b>コーンまで動けば1点</b>！
       </div>
     </div>
     <button class="mainBtn" id="startBtn">カメラを起動してキックオフ</button>
@@ -130,11 +135,10 @@
 (()=>{
 const $=id=>document.getElementById(id);
 const video=$('video');
-const AC=96,AR=72;
+const AC=112,AR=84;
 const a=document.createElement('canvas');a.width=AC;a.height=AR;
 const actx=a.getContext('2d',{willReadFrequently:true});
 let prevF=null,stream=null;
-let noise=1,thMove=8;
 let state='idle',mode='real';
 const TOTAL=7;
 let round=0,score=0;
@@ -155,36 +159,45 @@ function fxResize(){FW=innerWidth;FH=innerHeight;
   fx.width=FW*d;fx.height=FH*d;fctx.setTransform(d,0,0,d,0,0);}
 addEventListener('resize',fxResize);fxResize();
 
-// ===== tracking =====
-// userX: 画面上のあなたの水平位置 [-1,1]（動きの重心から推定）
-let userX=0,userConf=0;
+// ===== tracking v2：列ごとの「動きエネルギー蓄積マップ」 =====
+// 動いた列にエネルギーが溜まり、ゆっくり減衰 → 止まっていても直前の位置を保持できる
+const colE=new Float32Array(AC);
+let userX=0,tracking=false,noiseFloor=3;
 function track(){
   actx.save();actx.scale(-1,1);actx.drawImage(video,-AC,0,AC,AR);actx.restore();
   const cur=actx.getImageData(0,0,AC,AR).data;
-  let sum=0,sx=0;
+  const colNow=new Float32Array(AC);
+  let moved=0;
   if(prevF){
     for(let y=0;y<AR;y+=2){
-      for(let x=0;x<AC;x+=2){
+      for(let x=0;x<AC;x++){
         const i=(y*AC+x)*4;
         const d=Math.abs(cur[i]-prevF[i])+Math.abs(cur[i+1]-prevF[i+1])+Math.abs(cur[i+2]-prevF[i+2]);
-        if(d>62){sum++;sx+=x;}
+        if(d>48){colNow[x]++;moved++;}
       }
     }
   }
   prevF=cur.slice();
-  if(sum>thMove){
-    const cx=(sx/sum)/AC*2-1;           // -1..1
-    const k=Math.min(1,sum/(thMove*6))*0.45;
-    userX+=(cx-userX)*k;
-    userConf=Math.min(1,userConf+0.15);
-  }else userConf=Math.max(0,userConf-0.02);
-  return sum;
+  // 蓄積＆減衰
+  let P=0,SX=0,peak=0;
+  for(let x=0;x<AC;x++){
+    colE[x]=colE[x]*0.88+colNow[x];
+    P+=colE[x];SX+=colE[x]*x;
+    if(colE[x]>peak)peak=colE[x];
+  }
+  tracking=(moved>noiseFloor*2+4)||(P>noiseFloor*10+30);
+  if(P>noiseFloor*8+20){
+    const cx=(SX/P)/(AC-1)*2-1;          // -1..1（ミラー済み）
+    userX+=(cx-userX)*0.5;               // 素早く追従
+  }
+  $('dot').classList.toggle('on',tracking);
+  $('trackLbl').textContent=tracking?'検知中':'動いて位置を教えて';
+  return moved;
 }
 
-// ===== defender =====
-// dfX: 遅延つき追跡。userXの履歴を保持し、REACT ms前の位置を目標に最大速度で追う
+// ===== defender：遅延＋速度制限つき追跡 =====
 let dfX=0,hist=[];
-let dfSpeed=0.9,dfReact=420;            // ラウンドごとに強化
+let dfSpeed=1.2,dfReact=400;
 function dfUpdate(dt){
   const now=performance.now();
   hist.push({t:now,x:userX});
@@ -192,100 +205,96 @@ function dfUpdate(dt){
   let target=userX;
   for(let i=hist.length-1;i>=0;i--){if(now-hist[i].t>=dfReact){target=hist[i].x;break;}}
   const dx=target-dfX;
-  const step=Math.sign(dx)*Math.min(Math.abs(dx),dfSpeed*dt);
-  dfX+=step;
+  dfX+=Math.sign(dx)*Math.min(Math.abs(dx),dfSpeed*dt);
   dfX=Math.max(-1,Math.min(1,dfX));
 }
 
 // ===== drawing =====
-function drawSilhouette(cx,h,alpha){
-  // 守備姿勢の人型シルエット cx:中心px h:高さpx
-  const w=h*0.52, x=cx, yTop=FH*0.5-h*0.42;
+function drawSilhouette(cx,h,alpha,lean){
+  const yTop=FH*0.5-h*0.45;
   fctx.save();
-  fctx.translate(x,yTop);
-  fctx.fillStyle=`rgba(255,60,60,${alpha})`;
-  fctx.strokeStyle=`rgba(255,120,100,${alpha+0.15})`;
+  fctx.translate(cx,yTop);
+  fctx.rotate(lean*0.08);
+  fctx.fillStyle=`rgba(255,55,55,${alpha})`;
+  fctx.strokeStyle=`rgba(255,130,110,${Math.min(1,alpha+0.2)})`;
   fctx.lineWidth=3;
+  const u=h/100;
   fctx.beginPath();
-  const u=h/100; // unit
-  // 頭
   fctx.arc(0,8*u,7.5*u,0,7);
-  // 胴体（少し前傾）
-  fctx.moveTo(-9*u,18*u);
-  fctx.quadraticCurveTo(-11*u,40*u,-8*u,55*u);
-  fctx.lineTo(8*u,55*u);
-  fctx.quadraticCurveTo(11*u,40*u,9*u,18*u);
-  fctx.closePath();
-  // 左腕（広げる）
-  fctx.moveTo(-9*u,22*u);
-  fctx.quadraticCurveTo(-26*u,30*u,-34*u,26*u);
-  fctx.lineTo(-33*u,32*u);
-  fctx.quadraticCurveTo(-24*u,36*u,-8*u,30*u);
-  fctx.closePath();
-  // 右腕
-  fctx.moveTo(9*u,22*u);
-  fctx.quadraticCurveTo(26*u,30*u,34*u,26*u);
-  fctx.lineTo(33*u,32*u);
-  fctx.quadraticCurveTo(24*u,36*u,8*u,30*u);
-  fctx.closePath();
-  // 左脚（開いた守備スタンス）
-  fctx.moveTo(-8*u,55*u);
-  fctx.quadraticCurveTo(-14*u,75*u,-18*u,96*u);
-  fctx.lineTo(-11*u,98*u);
-  fctx.quadraticCurveTo(-6*u,76*u,-2*u,57*u);
-  fctx.closePath();
-  // 右脚
-  fctx.moveTo(8*u,55*u);
-  fctx.quadraticCurveTo(14*u,75*u,18*u,96*u);
-  fctx.lineTo(11*u,98*u);
-  fctx.quadraticCurveTo(6*u,76*u,2*u,57*u);
-  fctx.closePath();
-  fctx.fill();
-  fctx.stroke();
-  // "DF"ラベル
-  fctx.fillStyle=`rgba(255,255,255,${alpha+0.3})`;
-  fctx.font=`bold ${10*u}px sans-serif`;
-  fctx.textAlign='center';
+  fctx.moveTo(-9*u,18*u);fctx.quadraticCurveTo(-11*u,40*u,-8*u,55*u);
+  fctx.lineTo(8*u,55*u);fctx.quadraticCurveTo(11*u,40*u,9*u,18*u);fctx.closePath();
+  fctx.moveTo(-9*u,22*u);fctx.quadraticCurveTo(-27*u,28*u,-36*u,24*u);
+  fctx.lineTo(-35*u,31*u);fctx.quadraticCurveTo(-24*u,35*u,-8*u,30*u);fctx.closePath();
+  fctx.moveTo(9*u,22*u);fctx.quadraticCurveTo(27*u,28*u,36*u,24*u);
+  fctx.lineTo(35*u,31*u);fctx.quadraticCurveTo(24*u,35*u,8*u,30*u);fctx.closePath();
+  fctx.moveTo(-8*u,55*u);fctx.quadraticCurveTo(-15*u,75*u,-20*u,96*u);
+  fctx.lineTo(-12*u,98*u);fctx.quadraticCurveTo(-6*u,76*u,-2*u,57*u);fctx.closePath();
+  fctx.moveTo(8*u,55*u);fctx.quadraticCurveTo(15*u,75*u,20*u,96*u);
+  fctx.lineTo(12*u,98*u);fctx.quadraticCurveTo(6*u,76*u,2*u,57*u);fctx.closePath();
+  fctx.fill();fctx.stroke();
+  fctx.fillStyle=`rgba(255,255,255,${Math.min(1,alpha+0.35)})`;
+  fctx.font=`bold ${10*u}px sans-serif`;fctx.textAlign='center';
   fctx.fillText('DF',0,40*u);
   fctx.restore();
 }
-const vball={y:0,trail:[],anim:null,animT:0,fromX:0};
+function drawCone(cx,baseY,h,glow){
+  fctx.save();
+  if(glow){fctx.shadowColor='#42d77d';fctx.shadowBlur=22;}
+  // コーン本体
+  fctx.fillStyle='#ff7b1f';
+  fctx.beginPath();
+  fctx.moveTo(cx,baseY-h);
+  fctx.lineTo(cx-h*0.42,baseY);
+  fctx.lineTo(cx+h*0.42,baseY);
+  fctx.closePath();fctx.fill();
+  // 白帯
+  fctx.fillStyle='#fff';
+  fctx.beginPath();
+  fctx.moveTo(cx-h*0.19,baseY-h*0.52);fctx.lineTo(cx+h*0.19,baseY-h*0.52);
+  fctx.lineTo(cx+h*0.26,baseY-h*0.34);fctx.lineTo(cx-h*0.26,baseY-h*0.34);
+  fctx.closePath();fctx.fill();
+  // 台座
+  fctx.fillStyle='#e05f00';
+  fctx.fillRect(cx-h*0.5,baseY-3,h,6);
+  fctx.restore();
+  if(glow){
+    fctx.fillStyle='#42d77d';
+    fctx.font='bold 13px sans-serif';fctx.textAlign='center';
+    fctx.fillText('GOAL!',cx,baseY-h-10);
+  }
+}
+const vball={trail:[],anim:null,animT:0,fromX:0,toX:0};
+let stealT=0;
 function draw(dt){
   fctx.clearRect(0,0,FW,FH);
   if(state==='idle')return;
   const landscape=FW>FH;
-  const dfH=landscape?FH*0.72:FH*0.55;
-  const range=FW*0.38;                   // 水平の動く幅
-  // ゲート（左右）
-  const gateW=Math.max(18,FW*0.035);
+  const dfH=landscape?FH*0.74:FH*0.56;
+  const range=FW*0.40;
   const sep=Math.abs(userX-dfX);
-  const openSide=userX>dfX?1:-1;
-  for(const s of[-1,1]){
-    const open=(s===openSide&&sep>0.38);
-    fctx.fillStyle=open?`rgba(66,215,125,${0.35+Math.sin(performance.now()/150)*0.15})`:'rgba(255,255,255,0.10)';
-    const gx=s<0?0:FW-gateW;
-    fctx.fillRect(gx,FH*0.15,gateW,FH*0.7);
-    fctx.save();
-    fctx.translate(s<0?gateW+12:FW-gateW-12,FH*0.5);
-    fctx.rotate(-Math.PI/2);
-    fctx.fillStyle=open?'#42d77d':'rgba(255,255,255,0.35)';
-    fctx.font='bold 13px sans-serif';fctx.textAlign='center';
-    fctx.fillText(open?'GATE OPEN!':'GATE',0,0);
-    fctx.restore();
-  }
-  // DFシルエット
+  const cleared=sep>0.5;
+  // コーン（左右のゴール）
+  const coneH=Math.min(FH*0.11,80);
+  const coneX=[FW*0.055,FW*0.945];
+  drawCone(coneX[0],FH*0.86,coneH,cleared&&userX<dfX);
+  drawCone(coneX[1],FH*0.86,coneH,cleared&&userX>dfX);
+  // DFシルエット（あなたの方へ体を傾ける）
   const dfPx=FW/2+dfX*range;
-  drawSilhouette(dfPx,dfH,0.34);
-  // あなたのマーカー / 仮想ボール
+  drawSilhouette(dfPx,dfH,0.36,userX-dfX);
+  // あなた側：リング or 仮想ボール
   const uPx=FW/2+userX*range;
   if(mode==='virtual'){
-    let bx=uPx,by=FH*0.78;
+    let bx=uPx,by=FH*0.80;
     if(vball.anim==='fly'){
       vball.animT+=dt;
       const t=Math.min(1,vball.animT/0.5);
-      bx=vball.fromX+((vball.toX)-vball.fromX)*t;
-      by=FH*0.78-(FH*0.3)*Math.sin(t*Math.PI);
+      bx=vball.fromX+(vball.toX-vball.fromX)*t;
+      by=FH*0.80-FH*0.22*Math.sin(t*Math.PI);
       if(t>=1)vball.anim=null;
+    }else if(vball.anim==='steal'){
+      vball.animT+=dt;
+      bx=vball.fromX;by=FH*0.80-vball.animT*420;
+      if(vball.animT>0.8)vball.anim=null;
     }
     vball.trail.push({x:bx,y:by,life:.3});
     vball.trail.forEach(t=>t.life-=dt);
@@ -297,71 +306,79 @@ function draw(dt){
     fctx.fillStyle='#fff';fctx.beginPath();fctx.arc(bx,by,14,0,7);fctx.fill();
     fctx.strokeStyle='#222';fctx.lineWidth=1.5;
     fctx.beginPath();fctx.arc(bx,by,14,0,7);fctx.stroke();
-    fctx.fillStyle='#222';fctx.beginPath();
-    for(let i=0;i<5;i++){const an=-Math.PI/2+i*1.257;
-      const px=bx+Math.cos(an)*5.5,py=by+Math.sin(an)*5.5;
-      i?fctx.lineTo(px,py):fctx.moveTo(px,py);}
-    fctx.closePath();fctx.fill();
   }else{
-    // 実ボールモード：あなたの位置マーカー（足元リング）
-    fctx.strokeStyle='rgba(255,210,63,0.85)';fctx.lineWidth=3;
-    fctx.beginPath();fctx.ellipse(uPx,FH*0.82,26,10,0,0,7);fctx.stroke();
-    fctx.fillStyle='rgba(255,210,63,0.15)';
-    fctx.beginPath();fctx.ellipse(uPx,FH*0.82,26,10,0,0,7);fctx.fill();
+    fctx.strokeStyle='rgba(255,210,63,0.9)';fctx.lineWidth=3;
+    fctx.beginPath();fctx.ellipse(uPx,FH*0.84,26,10,0,0,7);fctx.stroke();
   }
-  // 距離ゲージ
-  $('sepFill').style.width=Math.min(100,sep/0.38*70)+'%';
+  // YOUマーカー（検知位置の見える化）
+  fctx.fillStyle=tracking?'#ffd23f':'#888';
+  fctx.beginPath();
+  fctx.moveTo(uPx,FH*0.13);fctx.lineTo(uPx-9,FH*0.13-14);fctx.lineTo(uPx+9,FH*0.13-14);
+  fctx.closePath();fctx.fill();
+  fctx.font='bold 11px sans-serif';fctx.textAlign='center';
+  fctx.fillText('YOU',uPx,FH*0.13-20);
+  // ゲージ
+  $('sepFill').style.width=Math.min(100,sep/0.5*75)+'%';
 }
 
 // ===== game flow =====
-let roundT=0,roundDur=10000,phase=null;
+let roundT=0,roundDur=12000,phase=null;
 function nextRound(){
-  round++;timerBar(0);
+  round++;timerBar(0);stealT=0;
   if(round>TOTAL)return endGame();
-  $('round').textContent=round+'/'+TOTAL;
   $('lvl').textContent=round;
-  // DF強化：速く・反応も鋭く
-  dfSpeed=0.85+round*0.22;
-  dfReact=Math.max(200,460-round*35);
-  dfX=0;userX=0;hist=[];
+  dfSpeed=1.0+round*0.28;
+  dfReact=Math.max(180,440-round*38);
+  dfX=0;hist=[];
   state='play';phase='play';roundT=performance.now();
-  CUE.textContent='DFを引き離して左右のゲートへ！';
-  SUB.textContent=mode==='real'?'ボールを運びながらフェイント→逆へサイドステップ':'フェイントで揺さぶって→逆へサイドステップ';
+  CUE.textContent=`ラウンド ${round}／DFを振り切ってコーンへ！`;
+  SUB.textContent='左右に揺さぶって、逆を取れ';
   speak('抜け出せ！');vib(30);
 }
-function judge(){
+function judge(dt){
   const now=performance.now();
   const el=(now-roundT)/roundDur;
   timerBar(Math.min(1,el));
   const sep=Math.abs(userX-dfX);
-  // 突破判定：端に到達 & DFを十分引き離している
-  if(Math.abs(userX)>0.62&&sep>0.38&&Math.sign(userX)!==Math.sign(dfX-userX)){
+  // ゴール：コーン到達（|userX|>0.72）かつ 完全に振り切っている（sep>0.5）
+  if(Math.abs(userX)>0.72&&sep>0.5){
     phase='feedback';
     score++;$('score').textContent=score;
     if(mode==='virtual'){
-      const range=FW*0.38;
-      vball.fromX=FW/2+userX*range;
-      vball.toX=userX>0?FW-10:10;
+      vball.fromX=FW/2+userX*FW*0.40;
+      vball.toX=userX>0?FW*0.945:FW*0.055;
       vball.anim='fly';vball.animT=0;
     }
-    bigMsg('突破!!','var(--ok)');speak('ナイス突破！');vib([40,30,90]);
+    bigMsg('ゴール!!','var(--gold)');speak('ゴール！');vib([40,30,100]);
     CUE.textContent='';SUB.textContent='';
-    setTimeout(nextRound,1300);
+    setTimeout(nextRound,1400);
     return;
   }
-  // 端に来たがDFが目の前 → ブロック演出（続行）
-  if(Math.abs(userX)>0.62&&sep<0.2&&phase==='play'){
+  // コーンに来たがDFがまだ近い
+  if(Math.abs(userX)>0.72&&sep<=0.5&&phase==='play'){
     if(!judge.blockCool||now-judge.blockCool>1500){
       judge.blockCool=now;
-      bigMsg('止められた!','var(--blue)',600);
-      SUB.textContent='一度戻って、揺さぶり直せ！';
+      bigMsg('まだ付かれてる!','var(--blue)',600);
+      SUB.textContent='一度中央へ戻って、揺さぶり直せ！';
       vib(60);
     }
   }
-  // タイムアップ
+  // 仮想ボール：DFに密着され続けると奪われる
+  if(mode==='virtual'){
+    if(sep<0.13)stealT+=dt;else stealT=Math.max(0,stealT-dt*2);
+    if(stealT>0.8){
+      phase='feedback';
+      vball.fromX=FW/2+userX*FW*0.40;
+      vball.anim='steal';vball.animT=0;
+      bigMsg('奪われた!','var(--ng)');speak('取られた！');vib(150);
+      CUE.textContent='';SUB.textContent='';
+      setTimeout(nextRound,1100);
+      return;
+    }
+  }
   if(el>=1){
     phase='feedback';
-    bigMsg('奪われた…','var(--ng)');speak('タイムアップ');vib(150);
+    bigMsg('タイムアップ','var(--ng)');speak('タイムアップ');vib(120);
     CUE.textContent='';SUB.textContent='';
     setTimeout(nextRound,1100);
   }
@@ -369,9 +386,9 @@ function judge(){
 function endGame(){
   state='done';timerBar(0);
   $('resultBox').style.display='block';
-  $('rScore').textContent=`突破 ${score} / ${TOTAL}`;
+  $('rScore').textContent=`ゴール ${score} / ${TOTAL}`;
   $('rDetail').innerHTML=(mode==='real'?'⚽実ボール':'🎮仮想ボール')+'モード<br>'+
-    (score>=6?'DF殺しの切れ味。もう誰も止められない。':score>=4?'いい揺さぶり。緩→急の変化をもっと大げさに。':'コツ：ゆっくり片側へ誘ってから、逆へ全力の一歩！');
+    (score>=6?'DF殺しの切れ味。誰にも止められない。':score>=4?'いい揺さぶり。緩→急の変化をもっと極端に。':'コツ：小さく2回誘ってから、逆へ大きな一歩！');
   document.querySelector('.card h1').innerHTML='トレーニング終了';
   $('startBtn').textContent='もう一回';
   $('overlay').classList.remove('hide');
@@ -381,17 +398,17 @@ function endGame(){
 // ===== calib & loop =====
 function startCalib(){
   state='calib';
-  CUE.textContent='中央に立って、静止';SUB.textContent='カメラ調整中…';
+  CUE.textContent='中央に立って、その場で軽く体を揺らして';
+  SUB.textContent='あなたの位置を覚えます…';
   let samples=[],t0=performance.now();
   const iv=setInterval(()=>{
     const s=track();samples.push(s);
     const sec=(performance.now()-t0)/1000;
-    SUB.textContent=`カメラ調整中… ${Math.max(0,(2.5-sec)).toFixed(1)}`;
-    if(sec>2.5){
+    SUB.textContent=`位置を検知中… ${Math.max(0,(3-sec)).toFixed(1)}（YOUマーカーが自分に付いていればOK）`;
+    if(sec>3){
       clearInterval(iv);
-      noise=Math.max(...samples,1);
-      thMove=noise*1.5+6;
-      userX=0;dfX=0;
+      samples.sort((x,y)=>x-y);
+      noiseFloor=Math.max(2,samples[Math.floor(samples.length*0.2)]);
       nextRound();
     }
   },80);
@@ -400,10 +417,12 @@ let lastT=0;
 function loop(t){
   requestAnimationFrame(loop);
   const dt=Math.min((t-lastT)/1000,0.05);lastT=t;
-  if(stream&&video.readyState>=2&&state==='play'){
-    track();
-    dfUpdate(dt);
-    if(phase==='play')judge();
+  if(stream&&video.readyState>=2&&(state==='play'||state==='calib')){
+    if(state==='play'){
+      track();
+      dfUpdate(dt);
+      if(phase==='play')judge(dt);
+    }
   }
   draw(dt);
 }
@@ -429,7 +448,7 @@ $('startBtn').addEventListener('click',async()=>{
     }
   }
   round=0;score=0;
-  $('score').textContent=0;$('round').textContent='-';$('lvl').textContent=1;
+  $('score').textContent=0;$('lvl').textContent=1;
   $('overlay').classList.add('hide');
   setTimeout(startCalib,500);
 });
